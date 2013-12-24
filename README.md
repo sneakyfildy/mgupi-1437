@@ -1,4 +1,4 @@
-mgupi_1437
+mgupi-1437
 ==========
 
-MGUPI computational maths little project (1402)
+MGUPI computational maths little project (1437)
