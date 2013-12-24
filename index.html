@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>«Разработка алгоритма численного решения нелинейного уравнения методом половинного деления»</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="/js/vendor/prettify/prettify.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="/js/vendor/prettify/prettify.js"></script>
+        <style>
+            body{
+                tab-size: 4;
+            }
+            #mainwrap{
+                width: 80%;
+                margin: 0 auto;
+            }
+            .caption{
+                text-align: center;
+                overflow-y: auto;
+
+            }
+            .try{
+                margin: 0 auto;
+                width: 30%;
+            }
+            .float_right{
+                float: right;
+            }
+            .text_right{
+                text-align: right;
+            }
+            .example{
+                display: inline-block;
+                padding: 5px;
+            }
+            .code{
+                font-family: monospace;
+            }
+            .border{
+                border: 1px solid gray;
+            }
+            .bold{
+                font-weight: bold;
+            }
+            .italic{
+                font-style: italic;
+            }
+            p{
+                margin: 0.5em 0;
+            }
+            .time{
+                color: red;
+                margin-top: 20px;
+                
+            }
+        </style>
+    </head>
+    <body onload="prettyPrint()">
+        <div id="mainwrap">
+            <div class="caption">
+                <p class="bold">Московский Государственный Университет 
+                    Приборостроения и Информатики</p>
+                <p>Кафедра ИТ-4</p>
+                <p>«Персональные компьютеры и сети»</p>
+
+                <p>Курсовая работа</p>
+
+                <p>курс: «Вычислительная математика»</p>
+
+                <p>«Разработка алгоритма численного решения нелинейного уравнения методом половинного деления»</p>
+                <p class="italic">Приложение к курсовой: реализация алгоритма на языке Javascript</p>
+                <div class="float_right text_right">
+                    <p>Выполнил:</p>
+                    <p>Студент 3 курса</p>
+                    <p>Факультет: ФЗДО</p>
+                    <p>Специальность: 230101</p>
+                    <p>Полев А.Е.</p>
+                </div>
+
+            </div>
+            <div class="caption bold">
+                Рассматривается пример: <span class="example border">sin( ln(x) )-cos( ln(x) ) + 2 * ln(x) = 0   [0,1;200]</span>
+            </div>
+            
+            <br/>
+            <br/>
+            
+            <div class="try steps">
+                <p>Результаты работы шагового алгоритма (сейчас настроено так, что если результатов больше, чем 1, то
+                метод половинного деление выполняться не будет)
+                </p>
+                <div>
+                    А: <span class="steps_res_a_1 bold"></span>
+                </div>
+                <div>
+                    В: <span class="steps_res_b_1 bold"></span>
+                </div>
+            </div>
+            <hr/>
+            <div class="try bisection">
+                <p>Результаты работы алгоритма половинного деления</p>
+                <div>
+                    Результат: <span class="bisection_solution_1 bold"></span>
+                </div>
+                <div>
+                    Шагов: <span class="bisection_steps_1 bold"></span>
+                </div>
+            </div>
+            
+            <br/>
+            <br/>
+            
+            <div class="caption bold">
+                Рассматривается пример: <span class="example border">sin(x^2) + cos(x^2) - 10x = 0   [0,1;200]</span>
+            </div>
+            <br/>
+            <br/>
+            <div class="try steps">
+                <p>Результаты работы шагового алгоритма (сейчас настроено так, что если результатов больше, чем 1, то
+                метод половинного деление выполняться не будет)
+                </p>
+                <div>
+                    А: <span class="steps_res_a_2 bold"></span>
+                </div>
+                <div>
+                    В: <span class="steps_res_b_2 bold"></span>
+                </div>
+            </div>
+            <hr/>
+            <div class="try bisection">
+                <p>Результаты работы алгоритма половинного деления</p>
+                <div>
+                    Результат: <span class="bisection_solution_2 bold"></span>
+                </div>
+                <div>
+                    Шагов: <span class="bisection_steps_2 bold"></span>
+                </div>
+            </div>
+            
+            <div class="try time">
+            </div>
+            
+            <div class="code">
+                <pre class="prettyprint">
+            var EPS			= 0.001 // epsilon - accuracy
+				,a			= 0.1
+				,b			= 200
+				,tsInitial
+				,tsDiff
+				,functions;
+            
+            // examples
+            functions = [
+                {
+                    id      : 1,
+                    code    : function(x){
+                        return Math.sin( Math.log(x) ) 
+								- Math.cos( Math.log(x) ) 
+								+ 2 * Math.log(x);
+                    }
+                },
+                {
+                    id      : 2,
+                    code    : function(x){
+                        return Math.sin( Math.pow(x, 2) ) +
+								Math.cos( Math.pow(x, 2) ) - 10 * x;
+                    }
+                }
+            ];
+            
+            // launch programm
+            for (var i = 0, l = functions.length; i < l; i++){
+                tsInitial = new Date().getTime();
+				
+                // call steps method as the easiest
+                steps(a, b, functions[i].code, functions[i].id);                                            
+                
+                tsDiff = Math.abs( ( ( tsInitial - new Date().getTime() ) / 1000) )
+						.toFixed(3);
+				
+                 // time diff
+                document.getElementsByClassName('time')[0]
+						.innerHTML = 'Время выполнения: ' + tsDiff + 'c.';
+                
+            }
+            
+            
+            // bisection method calculation
+            function bisection(limA, limB, f, id){
+                var k				= 0
+					,solution
+					,c
+					,eps			= EPS; // accuracy
+				
+				// while main bisection method rule is true
+                while( +Math.abs( limB - limA ).toFixed(3) > eps ){
+                    k++;						// count steps
+                    c = ( limB + limA ) / 2;	// divide interval by 2
+                    
+					// check side - left or right and change left or right limit
+					if ( f(limA) * f(c) <= 0 ){
+                        limB = c;
+					}else{
+                        limA = c;
+					}
+                }
+                
+                solution = ( limA + limB ) / 2;	// final solution
+                
+                document.getElementsByClassName('bisection_solution_' + id)[0]
+						.innerHTML = solution.toFixed(3);
+				
+                document.getElementsByClassName('bisection_steps_' + id)[0]
+						.innerHTML = k;
+            }
+            
+            // steps method calculation
+            function steps(originalA, originalB, f, id){
+                var k           = 0,
+                    limA        = originalA,
+                    limB,
+                    solution,
+                    eps         = EPS,                                                          // accuracy
+                    step        = +( Math.abs( originalA - originalB ) / 100 ).toFixed(4),      // step size
+                    arrA        = [],
+                    arrB        = [];
+                    
+                    limB = limA + step; // upper limit = lower limit plus step
+                    
+                    while( limB <= originalB + step / 100 ){
+                        if ( f(limA) * f(limB) < 0 ){
+                            k++;
+                            arrA.push( +limA.toFixed(3) );
+                            arrB.push( +limB.toFixed(3) );
+                        }
+                        // increase interval by step
+                        limA = limB;
+                        limB += step;
+                    }
+                    
+                    // switch by solutions count
+                    switch(k){
+                        case 0:
+                            return false;                           // no solutions in this interval
+                        case 1:
+                            bisection(arrA[0], arrB[0], f, id);     // one solution - run the bisection method
+                        default:
+                            drawStepsResult(arrA, arrB, id);        // show found intervals
+                    }
+                
+            }
+            
+            // draw results table for steps method
+            function drawStepsResult(a, b, id){
+                document.getElementsByClassName('steps_res_a_' + id)[0]
+						.innerHTML = a.join(', ');
+                document.getElementsByClassName('steps_res_b_' + id)[0]
+						.innerHTML = b.join(', ');
+            }
+                </pre>
+            </div>
+            
+        </div>
+        <script type="text/javascript">
+            
+            var EPS			= 0.001 // epsilon - accuracy
+				,a			= 0.1
+				,b			= 200
+				,tsInitial
+				,tsDiff
+				,functions;
+            
+            // examples
+            functions = [
+                {
+                    id      : 1,
+                    code    : function(x){
+                        return Math.sin( Math.log(x) ) 
+								- Math.cos( Math.log(x) ) 
+								+ 2 * Math.log(x);
+                    }
+                },
+                {
+                    id      : 2,
+                    code    : function(x){
+                        return Math.sin( Math.pow(x, 2) ) +
+								Math.cos( Math.pow(x, 2) ) - 10 * x;
+                    }
+                }
+            ];
+            
+            // launch programm
+            for (var i = 0, l = functions.length; i < l; i++){
+                tsInitial = new Date().getTime();
+				
+                // call steps method as the easiest
+                steps(a, b, functions[i].code, functions[i].id);                                            
+                
+                tsDiff = Math.abs( ( ( tsInitial - new Date().getTime() ) / 1000) )
+						.toFixed(3);
+				
+                 // time diff
+                document.getElementsByClassName('time')[0]
+						.innerHTML = 'Время выполнения: ' + tsDiff + 'c.';
+                
+            }
+            
+            
+            // bisection method calculation
+            function bisection(limA, limB, f, id){
+                var k				= 0
+					,solution
+					,c
+					,eps			= EPS; // accuracy
+				
+				// while main bisection method rule is true
+                while( +Math.abs( limB - limA ).toFixed(3) > eps ){
+                    k++;						// count steps
+                    c = ( limB + limA ) / 2;	// divide interval by 2
+                    
+					// check side - left or right and change left or right limit
+					if ( f(limA) * f(c) <= 0 ){
+                        limB = c;
+					}else{
+                        limA = c;
+					}
+                }
+                
+                solution = ( limA + limB ) / 2;	// final solution
+                
+                document.getElementsByClassName('bisection_solution_' + id)[0]
+						.innerHTML = solution.toFixed(3);
+				
+                document.getElementsByClassName('bisection_steps_' + id)[0]
+						.innerHTML = k;
+            }
+            
+            // steps method calculation
+            function steps(originalA, originalB, f, id){
+                var k           = 0,
+                    limA        = originalA,
+                    limB,
+                    solution,
+                    eps         = EPS,                                                          // accuracy
+                    step        = +( Math.abs( originalA - originalB ) / 100 ).toFixed(4),      // step size
+                    arrA        = [],
+                    arrB        = [];
+                    
+                    limB = limA + step; // upper limit = lower limit plus step
+                    
+                    while( limB <= originalB + step / 100 ){
+                        if ( f(limA) * f(limB) < 0 ){
+                            k++;
+                            arrA.push( +limA.toFixed(3) );
+                            arrB.push( +limB.toFixed(3) );
+                        }
+                        // increase interval by step
+                        limA = limB;
+                        limB += step;
+                    }
+                    
+                    // switch by solutions count
+                    switch(k){
+                        case 0:
+                            return false;                           // no solutions in this interval
+                        case 1:
+                            bisection(arrA[0], arrB[0], f, id);     // one solution - run the bisection method
+                        default:
+                            drawStepsResult(arrA, arrB, id);        // show found intervals
+                    }
+                
+            }
+            
+            // draw results table for steps method
+            function drawStepsResult(a, b, id){
+                document.getElementsByClassName('steps_res_a_' + id)[0]
+						.innerHTML = a.join(', ');
+                document.getElementsByClassName('steps_res_b_' + id)[0]
+						.innerHTML = b.join(', ');
+            }
+    
+        </script>
+    </body>
+</html>
